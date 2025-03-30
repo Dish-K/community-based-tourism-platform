@@ -30,7 +30,7 @@ exports.createCheckoutSession = async (req, res) => {
       },
     });
 
-    res.json({ sessionId: session.id });
+    res.json({ url: session.url });
   } catch (err) {
     console.error("Stripe session error:", err);
     res.status(500).json({ error: "Failed to create Stripe session" });
