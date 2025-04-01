@@ -2,13 +2,12 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const fs = require("fs");
-const authenticateUser = require("../middleware/authenticateUser");
+const { verifyToken } = require("../middleware/authenticateUser");
 const { createCheckoutSession } = require("../controllers/paymentController");
-const generateInvoice = require("../utils/invoiceGenerator");
 const sendEmail = require("../utils/emailSender");
 
 // ✅ Stripe session route
-router.post("/create-session", authenticateUser, createCheckoutSession);
+router.post("/create-session", verifyToken, createCheckoutSession);
 
 // ✅ Download route for existing invoices
 router.get("/invoice/:filename", (req, res) => {
@@ -24,10 +23,14 @@ router.get("/invoice/:filename", (req, res) => {
 });
 
 // ✅ Resend email with existing invoice
-router.post("/resend-invoice", authenticateUser, async (req, res) => {
+router.post("/resend-invoice", verifyToken, async (req, res) => {
   const { bookingId } = req.body;
-  const email = req.user.email;
-  const touristId = req.user.id;
+  const email = req.user?.email || req.body.email;
+  const touristId = req.user?.id || req.body.touristId;
+
+  if (!bookingId || !email || !touristId) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
 
   const filename = `invoice-${bookingId}.pdf`;
   const filePath = path.join(__dirname, "../invoices", filename);

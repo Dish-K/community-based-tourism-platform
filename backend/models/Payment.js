@@ -1,8 +1,7 @@
-// backend/models/Payment.js
-
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
-const paymentSchema = new mongoose.Schema({
+const paymentSchema = new Schema({
   bookingId: {
     type: String,
     required: true,
@@ -12,12 +11,14 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  businessId: {
-    type: String,
+  businessId: { // ✅ keep this name
+    type: Schema.Types.ObjectId,
+    ref: "Business", // ✅ Must match your model name
     required: true
   },
-  touristId: {
-    type: String,
+  touristId: { // ✅ keep this name
+    type: Schema.Types.ObjectId,
+    ref: "User", // ✅ Or "Tourist" if that’s your actual model name
     required: true
   },
   status: {
@@ -25,6 +26,6 @@ const paymentSchema = new mongoose.Schema({
     enum: ["paid", "failed", "pending refund", "refunded"],
     default: "paid"
   },
-}, { timestamps: true }); // adds createdAt and updatedAt
+}, { timestamps: true });
 
 module.exports = mongoose.model("Payment", paymentSchema);

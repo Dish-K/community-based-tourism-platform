@@ -7,6 +7,7 @@ import BookingPage from '../components/BookingPage';
 import PaymentPage from '../components/PaymentPage';
 import PaymentSuccess from '../components/PaymentSuccess';
 import PaymentCancelled from '../components/PaymentCancelled';
+import AdminPayments from "../components/AdminPaymentsPage";
 
 
 function AppRoutes() {
@@ -18,6 +19,7 @@ function AppRoutes() {
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+        <Route path="/admin/payments" element={<AdminPayments />} />
       </Routes>
     </Router>
   );

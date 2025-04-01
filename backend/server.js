@@ -9,7 +9,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Stripe Webhook route (raw body required)
+// ✅ Register Mongoose models globally
+require('./models/User');
+require('./models/Business');
+require('./models/Payment');
+require('./models/Commission'); // optional, future-proof
+
+// ✅ Stripe Webhook route (must use raw body)
 const stripeWebhook = require("./webhook/stripeWebhook");
 app.post(
   "/api/webhook/stripe",
@@ -17,32 +23,31 @@ app.post(
   stripeWebhook
 );
 
-// ✅ JSON parsing for everything else (after webhook)
-app.use(bodyParser.json());
-
-// Middlewares
-app.use(cors());
+// ✅ JSON parsing for all other routes
 app.use(express.json());
 
-// Auth middleware
-const authenticateUser = require('./middleware/authenticateUser');
-app.use(authenticateUser); 
+// ✅ Enable CORS
+app.use(cors());
 
-// Routes
+// ✅ Mock authentication middleware
+const { verifyToken } = require('./middleware/authenticateUser');
+app.use(verifyToken); // Injects req.user based on x-mock-role header
+
+// ✅ Routes
 const paymentRoutes = require('./routes/paymentRoutes');
-app.use('/api/payment', paymentRoutes);
+const adminRoutes = require('./routes/adminRoutes');
 
-// Root route
+app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
+
+// ✅ Root endpoint
 app.get('/', (req, res) => {
   res.send('CBT Platform API is running 🎉');
 });
 
-// DB Connection
+// ✅ MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  .connect(process.env.MONGODB_URL)
   .then(() => {
     console.log('✅ MongoDB Atlas connected');
     app.listen(PORT, () => {

@@ -7,18 +7,18 @@ function BookingPage() {
       const response = await axios.post(
         'http://localhost:5000/api/payment/create-session',
         {
-          bookingId: 'BOOK123',     // Replace with real booking ID
-          amount: 5000,             // LKR amount
-          businessId: 'BUS123'      // Replace with real business ID
+          bookingId: 'BOOK123',
+          amount: 5000,
+          businessId: '67ebbfd1272dd9cb54e4830e',
+          touristId: '67ebbe05272dd9cb54e4830c'
         },
         {
           headers: {
-            Authorization: `Bearer YOUR_TEST_JWT_HERE`, // Replace with real token
             'Content-Type': 'application/json'
           }
         }
       );
-
+  
       const checkoutUrl = response.data.url;
       window.location.href = checkoutUrl;
       
@@ -27,6 +27,7 @@ function BookingPage() {
       alert("Something went wrong while initiating payment.");
     }
   };
+  
 
   return (
     <div style={{ padding: "2rem" }}>
