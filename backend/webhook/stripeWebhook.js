@@ -1,63 +1,73 @@
-const Stripe = require('stripe');
-const fs = require('fs');
-const path = require('path');
-const sendEmail = require('../utils/emailSender');
-const generateInvoice = require('../utils/invoiceGenerator');
+// backend/webhook/stripeWebhook.js
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = require("../config/stripe");
+const generateInvoice = require("../utils/invoiceGenerator");
+const sendEmail = require("../utils/emailSender");
+const path = require("path");
+const Payment = require("../models/Payment");
+const Commission = require("../models/Commission");
 
-// Stripe signs each webhook — we must validate it!
-module.exports = (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+module.exports = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    console.log("✅ Webhook verified:", event.type);
   } catch (err) {
-    console.error("❌ Webhook signature verification failed:", err.message);
+    console.error("❌ Webhook signature error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Only handle successful checkouts
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-
     const bookingId = session.metadata.bookingId;
     const businessId = session.metadata.businessId;
     const touristId = session.metadata.touristId;
-    const amount = session.amount_total / 100; // convert from cents
     const email = session.customer_details.email;
+    const amount = session.amount_total / 100; // from cents to LKR/USD
 
-    const filename = `invoice-${bookingId}.pdf`;
-    const filePath = path.join(__dirname, '../invoices', filename);
+    const commissionRate = 0.1;
+    const commissionAmount = amount * commissionRate;
 
-    // Avoid duplicate sends
-    if (fs.existsSync(filePath)) {
-      console.log(`⚠️ Invoice already exists for ${bookingId}. Skipping re-send.`);
-      return res.status(200).send("Invoice already sent.");
+    try {
+      // Save payment record
+      await Payment.create({
+        bookingId,
+        amount,
+        businessId,
+        touristId,
+        status: "paid"
+      });
+
+      // Save commission record
+      await Commission.create({
+        bookingId,
+        businessId,
+        amount,
+        commissionRate,
+        commissionAmount
+      });
+
+      // Generate invoice
+      const filename = `invoice-${bookingId}.pdf`;
+      const filePath = path.join(__dirname, "../invoices", filename);
+      await generateInvoice({ bookingId, amount, businessId, touristId }, filename);
+
+      // Send email with invoice
+      await sendEmail({
+        to: email,
+        subject: `CBT Invoice – Booking ${bookingId}`,
+        text: `Hi, your invoice for booking ${bookingId} is attached.`,
+        attachmentPath: filePath
+      });
+
+      console.log("✅ Webhook handled: payment, commission, invoice, email");
+    } catch (err) {
+      console.error("❌ Webhook processing error:", err);
     }
-
-    (async () => {
-      try {
-        await generateInvoice({ bookingId, amount, businessId, touristId }, filename);
-        await sendEmail({
-          to: email,
-          subject: `CBT Invoice – Booking ${bookingId}`,
-          text: `Hi, your invoice for booking ${bookingId} is attached.`,
-          attachmentPath: filePath
-        });
-
-        console.log(`✅ Invoice generated & emailed for booking ${bookingId}`);
-        res.status(200).send("Invoice generated & email sent.");
-      } catch (err) {
-        console.error("❌ Failed during webhook invoice handling:", err);
-        res.status(500).send("Webhook error");
-      }
-    })();
-  } else {
-    res.status(200).send("Event ignored");
   }
+
+  res.json({ received: true });
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom'; // 🆕 Added useNavigate
 import axios from 'axios';
 
 function PaymentSuccess() {
@@ -8,6 +8,7 @@ function PaymentSuccess() {
 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // 🆕 Initialize navigate hook
 
   const handleResend = async () => {
     setLoading(true);
@@ -25,6 +26,10 @@ function PaymentSuccess() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoBack = () => {
+    navigate("/"); // Change to "/booking" if you want to go back to BookingPage instead
   };
 
   return (
@@ -71,6 +76,22 @@ function PaymentSuccess() {
 
       {/* Status Message */}
       {status && <p style={{ marginTop: "1rem" }}>{status}</p>}
+
+      {/* Back Button */}
+      <button
+        onClick={handleGoBack}
+        style={{
+          marginTop: "1.5rem",
+          padding: "0.5rem 1.2rem",
+          backgroundColor: "#8e44ad",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer"
+        }}
+      >
+        🏠 Back to Home
+      </button>
     </div>
   );
 }
