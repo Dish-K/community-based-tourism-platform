@@ -1,0 +1,57 @@
+####################################
+# 🔧 Node Modules
+####################################
+node_modules/
+
+####################################
+# 🔐 Environment Files
+####################################
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+####################################
+# 📦 Dependency Lock Files (optional)
+# You may keep package-lock.json if you want consistent installs
+####################################
+# yarn.lock
+# pnpm-lock.yaml
+
+####################################
+# 📝 Logs
+####################################
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+####################################
+# 🧾 Generated Files (PDFs, Invoices)
+####################################
+backend/invoices/*.pdf
+
+####################################
+# 📂 Build Output
+####################################
+frontend/build/
+
+####################################
+# 🧠 IDE & System Files
+####################################
+.vscode/
+.DS_Store
+Thumbs.db
+
+####################################
+# 🧪 Test Coverage
+####################################
+coverage/
+
+####################################
+# ⚙️ Misc
+####################################
+*.swp
+*.swo
+*.tmp
