@@ -4,6 +4,7 @@ const sendEmail = require("../utils/emailSender");
 const path = require("path");
 const Payment = require("../models/Payment");
 const Commission = require("../models/Commission");
+const Booking = require("../models/booking"); // ✅ Add this line
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -52,7 +53,7 @@ module.exports = async (req, res) => {
         }
       }
 
-      // ✅ Create or upsert commission (optional: skip if already exists)
+      // ✅ Create or upsert commission
       await Commission.create({
         bookingId,
         businessId,
@@ -67,6 +68,9 @@ module.exports = async (req, res) => {
         }
       });
 
+      // ✅ Update booking payment status here
+      await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "paid" }); // ✅ This is the key line
+
       // ✅ Generate invoice if not already there
       await generateInvoice({ bookingId, amount, businessId, touristId }, filename);
 
@@ -78,7 +82,7 @@ module.exports = async (req, res) => {
         attachmentPath: filePath
       });
 
-      console.log("✅ Webhook completed: Payment, Invoice, Email sent.");
+      console.log("✅ Webhook completed: Payment, Booking updated, Invoice, Email sent.");
     } catch (err) {
       console.error("❌ Webhook processing error:", err);
     }

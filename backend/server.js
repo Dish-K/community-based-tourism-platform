@@ -1,3 +1,4 @@
+// ✅ Existing imports...
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -13,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 require('./models/User');
 require('./models/Business');
 require('./models/Payment');
-require('./models/Commission'); // optional, future-proof
+require('./models/Commission');
 
 // ✅ Stripe Webhook route (must use raw body)
 const stripeWebhook = require("./webhook/stripeWebhook");
@@ -35,10 +36,14 @@ app.use(verifyToken); // Injects req.user based on x-mock-role header
 
 // ✅ Routes
 const paymentRoutes = require('./routes/paymentRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-
 app.use('/api/payment', paymentRoutes);
+
+const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
+
+// ✅ Mount friend's bookings route (NEW)
+const bookingRoutes = require('./routes/bookings');
+app.use('/booking', bookingRoutes); // POST /booking/add
 
 // ✅ Root endpoint
 app.get('/', (req, res) => {
